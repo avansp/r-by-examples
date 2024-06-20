@@ -2,7 +2,7 @@
 
 ------------------------------------------------------------------------
 
-This is the source code for my R recipes book available on [https://avansp.github.io/r-by-examples/](#0).
+This is the source code for my R recipes book available on <https://avansp.github.io/r-by-examples/>.
 
 ## Develop
 

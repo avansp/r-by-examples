@@ -104,6 +104,19 @@ creates a new column `Age` as a factor that shows a range of ages between `<40, 
 
 There is also another `mutate` statement to create a new column `AortaSize` and `AortaSize_cat` based on the maximum value between `STJ`, `SoV` and `AscAo` measurements. I separated this creation from the above because we need to specify R to calculate the maximum value row-wise instead of column-wise. Hence the `rowwise()` function preceded.
 
+```{r, eval=FALSE}
+rowwise() %>%
+mutate(
+  AortaSize = max(SoV, STJ, AscAo, na.rm=TRUE),
+  AortaSize_cat = case_when(
+    AortaSize <= 4.0 ~ "Normal",
+    AortaSize <= 4.5 ~ "Mild",
+    AortaSize <= 5.0 ~ "Moderate",
+    AortaSize <= 9.0 ~ "Severe",
+    .default = NA) %>% factor(levels = c("Normal", "Mild", "Moderate", "Severe"))
+)
+```
+
 See more about [`mutate`](https://dplyr.tidyverse.org/reference/mutate.html){target="_blank"}, [`case_when`](https://dplyr.tidyverse.org/reference/case_when.html){target="_blank"}, and [`rowwise`](https://dplyr.tidyverse.org/articles/rowwise.html){target="_blank"} functions.
 
 ## Table summary
