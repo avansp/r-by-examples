@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Mastering R by Examples - 2&nbsp; Summary</title>
+<title>Mastering R by Examples - 2&nbsp; Table One</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -65,7 +65,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
 <link href="./references.html" rel="next">
-<link href="./table_one.html" rel="prev">
+<link href="./data_summary.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
@@ -108,7 +108,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./summary.html"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Summary</span></a></li></ol></nav>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./table_one.html"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Table One</span></a></li></ol></nav>
       <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
       </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -141,14 +141,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./table_one.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Table One</span></span></a>
+  <a href="./data_summary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Different ways to summarise</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./summary.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Summary</span></span></a>
+  <a href="./table_one.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Table One</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -163,14 +163,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#simple-comparison" id="toc-simple-comparison" class="nav-link active" data-scroll-target="#simple-comparison"><span class="header-section-number">2.1</span> Simple comparison</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Summary</span></h1>
+<h1 class="title"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Table One</span></h1>
 </div>
 
 
@@ -185,15 +191,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </header>
 
-<p>In summary, this book has no content whatsoever.</p>
+<p><strong>Table 1</strong> is the most important table in a clinical paper that usually describes the demographics of the patient data. It shows comparisons between groups with statistical tests to demonstrate how objective the data used in the paper.</p>
+<p>Here’s an example of Table 1:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/table_1_avelar_hypertension_2017.png" class="img-fluid figure-img" width="557"></p>
+<figcaption class="figure-caption">Source: <a href="https://www.ahajournals.org/doi/10.1161/01.HYP.0000251711.92482.14" target="_blank">https://www.ahajournals.org/doi/10.1161/01.HYP.0000251711.92482.14</a></figcaption>
+</figure>
+</div>
+<p>There are many libraries, which can help you to create this table, but I like <code>gtsummary</code> package. We’ll try to run some examples creating beautiful Table 1’s using this package.</p>
+<p>More information about <code>gtsummary</code>: <a href="https://www.danieldsjoberg.com/gtsummary/https://www.danieldsjoberg.com/gtsummary/" target="_blank">https://www.danieldsjoberg.com/gtsummary/</a></p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="sc">+</span> <span class="dv">1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 2</code></pre>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gtsummary)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</div>
+<section id="simple-comparison" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="simple-comparison"><span class="header-section-number">2.1</span> Simple comparison</h2>
+<p>Let’s say we have anonymised clinical data in two files:</p>
+<ol type="1">
+<li><p><code>demographic.csv</code></p>
+<p>Contains clinical data per patients: sex (F/M), age,</p></li>
+<li><p><code>heart.csv</code></p></li>
+</ol>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -429,11 +451,10 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
 });
 </script>
-
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./table_one.html" class="pagination-link">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Table One</span></span>
+      <a href="./data_summary.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Different ways to summarise</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
