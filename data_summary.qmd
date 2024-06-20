@@ -1,0 +1,99 @@
+# Different ways to summarise
+
+```{r, message=FALSE}
+library(tidyverse)
+```
+
+Let's use `mtcars` data, but first we need to convert two numeric variables into factor:
+
+```{r}
+# fix some numeric variables into factor
+dt <- mutate( mtcars,
+  vs = factor(vs, levels=c(0, 1), labels=c("V-shaped", "straight")),
+  am = factor(am, levels=c(0, 1), labels=c("automatic", "manual"))
+)
+
+glimpse(dt)
+```
+
+## `desc_table`
+
+```{r, message=FALSE}
+library(desctable)
+```
+
+The library `desctable` provides `desc_table()` function to calculate main descriptive statistics. The output is a new dataframe. You can also change the output using `desc_output()` function.
+
+**Numeric variables**
+
+```{r}
+desc_table(dt %>% select(-c(am, vs))) %>% desc_output('pander')
+```
+
+**Categorical variables**
+
+```{r}
+desc_table(dt %>% select(c(am, vs))) %>% desc_output("pander")
+```
+
+See more: [https://cran.r-project.org/web/packages/desctable/vignettes/desctable.html](https://cran.r-project.org/web/packages/desctable/vignettes/desctable.html){target="_blank"}
+
+## `skim`
+
+```{r, message=FALSE}
+library(skimr)
+```
+
+`skim()` from `skimr` package provides a complete summary separated between numeric and categorical variables. Interestingly, histogram bars are shown in the last column for numeric variables.
+
+```{r}
+skim(dt)
+```
+
+See more: [https://cran.r-project.org/web/packages/skimr/vignettes/skimr.html](https://cran.r-project.org/web/packages/skimr/vignettes/skimr.html){target="_blank"}
+
+## `tableone`
+
+```{r}
+library(tableone)
+```
+
+Table 1 is a common name used in biomedical research paper that describes the patient demographics. A package called `tableone` aims to ease the production of this table, and we can use this package to summarise our data.
+
+```{r}
+CreateTableOne(data=dt, strata="am")
+```
+
+## `tbl_summary`
+
+```{r}
+library(gtsummary)
+```
+
+The `gtsummary` package provides a rich collection of functions for summarising tables and results from different statistical analyses, e.g. regression, survival analysis, etc.. The simple one, `tbl_summary()`, can generate a beautiful summary table, ready for publication.
+
+```{r, warning=FALSE, message=FALSE}
+dt %>%
+  tbl_summary(
+    by = am,
+    label = c(
+      mpg ~ "Miles/gallon (US)",
+      cyl ~ "Number of cylinders",
+      disp ~ "Displacement (cu.in)",
+      hp ~ "Gross horsepower",
+      drat ~ "Rear axle ratio",
+      wt ~ "Weight (1,000 lbs)",
+      qsec ~"Quarter mile time",
+      vs ~ "Engine type",
+      gear ~ "Number of forward gears",
+      carb ~ "Number of carburators"
+    ),
+    statistic = c(all_continuous() ~ "{mean} ± {sd}")
+  ) %>%
+  add_p() %>%
+  separate_p_footnotes() %>%
+  add_overall(last = TRUE) %>%
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Transmission**")
+```
+
+See more: [https://www.danieldsjoberg.com/gtsummary/index.html](https://www.danieldsjoberg.com/gtsummary/index.html){target="_blank"}

@@ -2,13 +2,13 @@ project:
   type: book
 
 book:
-  title: "r-by-examples"
-  author: "Norah Jones"
-  date: "18/06/2024"
+  title: "Mastering R by Examples"
+  author: "Avan Suinesiaputra"
+  date: ""
   chapters:
     - index.qmd
-    - intro.qmd
-    - summary.qmd
+    - load_and_prepare.qmd
+    - data_summary.qmd
     - references.qmd
 
 bibliography: references.bib

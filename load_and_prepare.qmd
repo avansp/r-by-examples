@@ -1,0 +1,139 @@
+# Reading CSV file
+
+R built-in function to load a CSV file is the `read.csv()` function, but I prefer to use `read_csv()` function from `tidyverse` package. It's more versatile and you have more controls over correctness of the data.
+
+```{r, message=FALSE}
+library(tidyverse)
+```
+
+This example demonstrates how to read a CSV file, correcting some column data types, and creating new categorical variables.
+
+The data is taken from echocardiographic exams, but we only select some variables and cases to reduce the dimension for the sake of the explanation of this example.
+
+## Without correction
+
+```{r}
+read_csv('../NEDA/Version_03062024_SurvivalAllCases/Aortopathy_ECHO_Progression_03_VALID.csv', 
+         show_col_types = FALSE) %>%
+  select(StudyID, PatientID, Sex, Age_At_Echo, Examination_Date, Outcome, SoV, STJ, AscAo) %>%
+  sample_n(10000) %>%
+  glimpse()
+```
+
+## With corrections
+
+*and some new variables added*
+
+```{r}
+dt <- read_csv('../NEDA/Version_03062024_SurvivalAllCases/Aortopathy_ECHO_Progression_03_VALID.csv', 
+         show_col_types = FALSE,
+         col_types = cols(
+           PatientID = col_character(), 
+           StudyID = col_character(),
+           Examination_Date = col_date("%Y-%m-%d"),
+           Sex = col_factor(),
+           Outcome = col_factor())) %>%
+  # select few variables for the sake of simplicity
+  select(StudyID, PatientID, Sex, Age_At_Echo, Examination_Date, Outcome, SoV, STJ, AscAo) %>%
+  # just take randomly 10,000 rows for this demonstration
+  sample_n(10000) %>%
+  mutate(
+    # we want to create a new variable Age that consists of range of ages
+    Age = case_when(
+      Age_At_Echo < 40 ~ "< 40",
+      Age_At_Echo < 50 ~ "40-50",
+      Age_At_Echo < 60 ~ "50-60",
+      Age_At_Echo < 70 ~ "60-70",
+      Age_At_Echo >= 70 ~ "≥ 70"
+    ) %>% factor(levels=c("< 40", "40-50", "50-60", "60-70", "≥ 70"))
+  ) %>%
+  # another computation is to create a new variable called Aorta_Size
+  # which takes the maximum value between SoV, STJ, and Asc_Ao values
+  # for each scan, then categorise it to 4 groups of severities
+  rowwise() %>%
+  mutate(
+    AortaSize = max(SoV, STJ, AscAo, na.rm=TRUE),
+    AortaSize_cat = case_when(
+      AortaSize <= 4.0 ~ "Normal",
+      AortaSize <= 4.5 ~ "Mild",
+      AortaSize <= 5.0 ~ "Moderate",
+      AortaSize <= 9.0 ~ "Severe",
+      .default = NA) %>% factor(levels = c("Normal", "Mild", "Moderate", "Severe"))) %>%
+  ungroup()
+
+# show the structure
+glimpse(dt)
+  
+```
+
+**Explanations**
+
+1.  Correcting data types
+
+The argument of
+
+```{r, eval=FALSE}
+col_types = cols(
+  PatientID = col_character(), 
+  StudyID = col_character(),
+  Examination_Date = col_date("%Y-%m-%d"),
+  Sex = col_factor(),
+  Outcome = col_factor()
+)
+```
+
+forces `read_csv()` to use specific data types for specific columns (see: [`cols` specification](https://readr.tidyverse.org/reference/cols.html){target="_blank"}).
+
+2.  Create a new variable with `mutate`
+
+The statement
+
+```{r, eval=FALSE}
+mutate(
+  Age = case_when(
+    Age_At_Echo < 40 ~ "< 40",
+    Age_At_Echo < 50 ~ "40-50",
+    Age_At_Echo < 60 ~ "50-60",
+    Age_At_Echo < 70 ~ "60-70",
+    Age_At_Echo >= 70 ~ "≥ 70"
+    ) %>% factor(levels=c("< 40", "40-50", "50-60", "60-70", "≥ 70"))
+)
+```
+
+creates a new column `Age` as a factor that shows a range of ages between `<40, 40-50, 50-60, 60-70, ≥70` years old.
+
+There is also another `mutate` statement to create a new column `AortaSize` and `AortaSize_cat` based on the maximum value between `STJ`, `SoV` and `AscAo` measurements. I separated this creation from the above because we need to specify R to calculate the maximum value row-wise instead of column-wise. Hence the `rowwise()` function preceded.
+
+See more about [`mutate`](https://dplyr.tidyverse.org/reference/mutate.html){target="_blank"}, [`case_when`](https://dplyr.tidyverse.org/reference/case_when.html){target="_blank"}, and [`rowwise`](https://dplyr.tidyverse.org/articles/rowwise.html){target="_blank"} functions.
+
+## Table summary
+
+Let's summarise our data to compare all patients based on their survival: *dead* or *alive*.
+
+```{r, message=FALSE}
+library('gtsummary')
+```
+
+**Note** that the data may contain multiple scans for a patient. Thus, we will search the earliest scan first for each patient for the comparison.
+
+```{r}
+dt %>%
+  # analyse examination date per patient
+  group_by(PatientID) %>%
+  mutate(
+    Earliest_Date = min(Examination_Date)
+  ) %>%
+  # release the grouping and now filter the earliest date only
+  ungroup() %>%
+  filter(Examination_Date == Earliest_Date) %>%
+  # this should filter out multiple scan
+  # we can safely give the data to tbl_summary function
+  tbl_summary(
+    by = Outcome,
+    include = c(Sex, Age, SoV, STJ, AscAo, AortaSize, AortaSize_cat),
+    missing = "no"
+  ) %>%
+  add_p() %>%
+  separate_p_footnotes()
+
+```
