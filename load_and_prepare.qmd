@@ -2,19 +2,18 @@
 
 R built-in function to load a CSV file is the `read.csv()` function, but I prefer to use `read_csv()` function from `tidyverse` package. It's more versatile and you have more controls over correctness of the data.
 
-```{r, message=FALSE}
-library(tidyverse)
-```
-
 This example demonstrates how to read a CSV file, correcting some column data types, and creating new categorical variables.
 
 The data is taken from echocardiographic exams, but we only select some variables and cases to reduce the dimension for the sake of the explanation of this example.
 
+```{r, message=FALSE}
+library(tidyverse)
+```
+
 ## Without correction
 
 ```{r}
-read_csv('../NEDA/Version_03062024_SurvivalAllCases/Aortopathy_ECHO_Progression_03_VALID.csv', 
-         show_col_types = FALSE) %>%
+read_csv('sample_data/echo_data.csv', show_col_types = FALSE) %>%
   select(StudyID, PatientID, Sex, Age_At_Echo, Examination_Date, Outcome, SoV, STJ, AscAo) %>%
   sample_n(10000) %>%
   glimpse()
@@ -25,8 +24,7 @@ read_csv('../NEDA/Version_03062024_SurvivalAllCases/Aortopathy_ECHO_Progression_
 *and some new variables added*
 
 ```{r}
-dt <- read_csv('../NEDA/Version_03062024_SurvivalAllCases/Aortopathy_ECHO_Progression_03_VALID.csv', 
-         show_col_types = FALSE,
+dt <- read_csv('sample_data/echo_data.csv', show_col_types = FALSE,
          col_types = cols(
            PatientID = col_character(), 
            StudyID = col_character(),
