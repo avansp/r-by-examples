@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.353">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Mastering R by Examples - 4&nbsp; Bland-Altman analysis</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./references.html" rel="next">
+<link href="./data_summary.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./load_and_prepare.html">Examples</a></li><li class="breadcrumb-item"><a href="./bland_altman.html"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Bland-Altman analysis</span></a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Mastering R by Examples</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">About</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true">
+ <span class="menu-text">Basic Concepts</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./pipes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title"><code>%&gt;%</code> operator</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true">
+ <span class="menu-text">Examples</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./load_and_prepare.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Reading CSV file</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./data_summary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Different ways to summarise</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./bland_altman.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Bland-Altman analysis</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#loading-the-data" id="toc-loading-the-data" class="nav-link active" data-scroll-target="#loading-the-data"><span class="header-section-number">4.1</span> Loading the data</a>
+  <ul class="collapse">
+  <li><a href="#automated-segmentation" id="toc-automated-segmentation" class="nav-link" data-scroll-target="#automated-segmentation"><span class="header-section-number">4.1.1</span> Automated segmentation</a></li>
+  <li><a href="#manual-segmentation" id="toc-manual-segmentation" class="nav-link" data-scroll-target="#manual-segmentation"><span class="header-section-number">4.1.2</span> Manual segmentation</a></li>
+  <li><a href="#join-the-tables" id="toc-join-the-tables" class="nav-link" data-scroll-target="#join-the-tables"><span class="header-section-number">4.1.3</span> Join the tables</a></li>
+  </ul></li>
+  <li><a href="#processing" id="toc-processing" class="nav-link" data-scroll-target="#processing"><span class="header-section-number">4.2</span> Processing</a>
+  <ul class="collapse">
+  <li><a href="#calculate-differences-and-averages" id="toc-calculate-differences-and-averages" class="nav-link" data-scroll-target="#calculate-differences-and-averages"><span class="header-section-number">4.2.1</span> Calculate differences and averages</a></li>
+  <li><a href="#convert-into-long-table" id="toc-convert-into-long-table" class="nav-link" data-scroll-target="#convert-into-long-table"><span class="header-section-number">4.2.2</span> Convert into long table</a></li>
+  </ul></li>
+  <li><a href="#the-plot" id="toc-the-plot" class="nav-link" data-scroll-target="#the-plot"><span class="header-section-number">4.3</span> The plot</a>
+  <ul class="collapse">
+  <li><a href="#lvedv" id="toc-lvedv" class="nav-link" data-scroll-target="#lvedv"><span class="header-section-number">4.3.1</span> LVEDV</a></li>
+  <li><a href="#rvedv" id="toc-rvedv" class="nav-link" data-scroll-target="#rvedv"><span class="header-section-number">4.3.2</span> RVEDV</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Bland-Altman analysis</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<p>The seminal paper written by Douglas G. Altman and J. Martin Bland on Lancet in 1986 <span class="citation" data-cites="bland1986statistical">(<a href="references.html#ref-bland1986statistical" role="doc-biblioref">Bland and Altman 1986</a>)</span> has been the most cited paper ever. The method compares values measured by either different observers, devices, or algorithm. If the two measurements are comparable, then we expect that</p>
+<ol type="1">
+<li>the bias or mean of differences will be around zero,</li>
+<li>the differences are within the limits of agreement (usually ± 2 standard deviation), and</li>
+<li>there is no systematic differences or a trend line as the size of the object is getting bigger or smaller.</li>
+</ol>
+<p>Let’s create the Bland-Altman plot.</p>
+<section id="loading-the-data" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="loading-the-data"><span class="header-section-number">4.1</span> Loading the data</h2>
+<p>This example uses datasets from a study that segmented human heart from cardiac MR images. Two measurements were performed: by an automatic segmentation method and by manual segmentation. We’re going to use only the left ventricle volume at end-diastole (LVEDV) and the right ventricle volume at end-diastole (RVEDV).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="automated-segmentation" class="level3" data-number="4.1.1">
+<h3 data-number="4.1.1" class="anchored" data-anchor-id="automated-segmentation"><span class="header-section-number">4.1.1</span> Automated segmentation</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>dt_auto <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">'sample_data/auto_heart.csv'</span>, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>                    <span class="at">col_types =</span> <span class="fu">cols</span>(</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>                      <span class="at">name =</span> <span class="fu">col_character</span>(),</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>                      <span class="at">Frame =</span> <span class="fu">col_character</span>(),</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>                      <span class="at">lv_vol =</span> <span class="fu">col_double</span>(),</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>                      <span class="at">rv_vol =</span> <span class="fu">col_double</span>()</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>                    )) <span class="sc">%&gt;%</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># the ED frame for automated segmentation is at Frame == '000'</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Frame <span class="sc">==</span> <span class="st">'000'</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># select only the necessary columns</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(name, lv_vol, rv_vol) <span class="sc">%&gt;%</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># fix the name to match with patient ID's from the manual data</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">name =</span> <span class="fu">str_replace</span>(<span class="fu">str_replace</span>(name, <span class="st">'HCMR_'</span>, <span class="st">''</span>), <span class="st">'_'</span>, <span class="st">'-'</span>),</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">LVEDV =</span> lv_vol, <span class="at">RVEDV =</span> rv_vol, <span class="at">patientID =</span> name)</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(dt_auto)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 2,561
+Columns: 3
+$ patientID &lt;chr&gt; "001-0001", "001-0002", "001-0003", "001-0004", "001-0005", …
+$ LVEDV     &lt;dbl&gt; 253.2800, 204.6309, 226.3057, 176.5268, 192.3013, 176.6057, …
+$ RVEDV     &lt;dbl&gt; 525.5834, 335.4120, 370.6469, 239.0387, 300.2459, 409.7711, …</code></pre>
+</div>
+</div>
+</section>
+<section id="manual-segmentation" class="level3" data-number="4.1.2">
+<h3 data-number="4.1.2" class="anchored" data-anchor-id="manual-segmentation"><span class="header-section-number">4.1.2</span> Manual segmentation</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>dt_man <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">'sample_data/corelab_heart.csv'</span>, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>                   <span class="at">col_types =</span> <span class="fu">cols</span>(</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>                     <span class="at">sitePatID =</span> <span class="fu">col_character</span>(),</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>                     <span class="at">lvedv =</span> <span class="fu">col_double</span>(),</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>                     <span class="at">rvedv =</span> <span class="fu">col_double</span>()</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>                   )) <span class="sc">%&gt;%</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(sitePatID, lvedv, rvedv) <span class="sc">%&gt;%</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">LVEDV =</span> lvedv, <span class="at">RVEDV =</span> rvedv, <span class="at">patientID =</span> sitePatID)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(dt_man)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 2,752
+Columns: 3
+$ patientID &lt;chr&gt; "001-0001", "001-0002", "001-0003", "001-0004", "001-0005", …
+$ LVEDV     &lt;dbl&gt; 253.39, 171.29, 210.51, 184.92, 190.18, 166.26, 229.61, 246.…
+$ RVEDV     &lt;dbl&gt; 214.25, 161.98, 156.02, 137.83, 174.10, 147.49, 181.40, 202.…</code></pre>
+</div>
+</div>
+</section>
+<section id="join-the-tables" class="level3" data-number="4.1.3">
+<h3 data-number="4.1.3" class="anchored" data-anchor-id="join-the-tables"><span class="header-section-number">4.1.3</span> Join the tables</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>dt_joined <span class="ot">&lt;-</span> <span class="fu">inner_join</span>(dt_auto, dt_man,</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>                        <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"patientID"</span> <span class="ot">=</span> <span class="st">"patientID"</span>),</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>                        <span class="at">suffix =</span> <span class="fu">c</span>(<span class="st">"_auto"</span>, <span class="st">"_man"</span>))</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(dt_joined)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 2,540
+Columns: 5
+$ patientID  &lt;chr&gt; "001-0001", "001-0002", "001-0003", "001-0004", "001-0005",…
+$ LVEDV_auto &lt;dbl&gt; 253.2800, 204.6309, 226.3057, 176.5268, 192.3013, 176.6057,…
+$ RVEDV_auto &lt;dbl&gt; 525.5834, 335.4120, 370.6469, 239.0387, 300.2459, 409.7711,…
+$ LVEDV_man  &lt;dbl&gt; 253.39, 171.29, 210.51, 184.92, 190.18, 166.26, 229.61, 246…
+$ RVEDV_man  &lt;dbl&gt; 214.25, 161.98, 156.02, 137.83, 174.10, 147.49, 181.40, 202…</code></pre>
+</div>
+</div>
+<p>See more: <a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" target="_blank">join operations.</a></p>
+<p><strong>A sanity check</strong>: the number of unique patient ID == number of rows</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(dt_joined) <span class="sc">==</span> <span class="fu">nrow</span>(<span class="fu">distinct</span>(dt_joined, patientID))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="processing" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="processing"><span class="header-section-number">4.2</span> Processing</h2>
+<p>Bland-Altman analysis plots points, where</p>
+<ul>
+<li><p>x-axis is the average between the two methods, and</p></li>
+<li><p>y-axis is the differences between the two methods</p></li>
+</ul>
+<p>Thus, we need to calculate the differences and the averages between the automated and segmentation methods for both LVEDV and RVEDV values.</p>
+<section id="calculate-differences-and-averages" class="level3" data-number="4.2.1">
+<h3 data-number="4.2.1" class="anchored" data-anchor-id="calculate-differences-and-averages"><span class="header-section-number">4.2.1</span> Calculate differences and averages</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>dt_all <span class="ot">&lt;-</span> dt_joined <span class="sc">%&gt;%</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">LVEDV_diff =</span> LVEDV_auto <span class="sc">-</span> LVEDV_man,</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">RVEDV_diff =</span> RVEDV_auto <span class="sc">-</span> RVEDV_man,</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">LVEDV_avg =</span> <span class="fl">0.5</span> <span class="sc">*</span> (LVEDV_auto <span class="sc">+</span> LVEDV_man),</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">RVEDV_avg =</span> <span class="fl">0.5</span> <span class="sc">*</span> (RVEDV_auto <span class="sc">+</span> RVEDV_man)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(dt_all, <span class="at">n=</span><span class="dv">10</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table table-sm table-striped small">
+<colgroup>
+<col style="width: 10%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 10%">
+<col style="width: 10%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 10%">
+<col style="width: 10%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">patientID</th>
+<th style="text-align: right;">LVEDV_auto</th>
+<th style="text-align: right;">RVEDV_auto</th>
+<th style="text-align: right;">LVEDV_man</th>
+<th style="text-align: right;">RVEDV_man</th>
+<th style="text-align: right;">LVEDV_diff</th>
+<th style="text-align: right;">RVEDV_diff</th>
+<th style="text-align: right;">LVEDV_avg</th>
+<th style="text-align: right;">RVEDV_avg</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">001-0001</td>
+<td style="text-align: right;">253.2800</td>
+<td style="text-align: right;">525.5834</td>
+<td style="text-align: right;">253.39</td>
+<td style="text-align: right;">214.25</td>
+<td style="text-align: right;">-0.1099607</td>
+<td style="text-align: right;">311.33337</td>
+<td style="text-align: right;">253.3350</td>
+<td style="text-align: right;">369.9167</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">001-0002</td>
+<td style="text-align: right;">204.6309</td>
+<td style="text-align: right;">335.4120</td>
+<td style="text-align: right;">171.29</td>
+<td style="text-align: right;">161.98</td>
+<td style="text-align: right;">33.3409099</td>
+<td style="text-align: right;">173.43200</td>
+<td style="text-align: right;">187.9605</td>
+<td style="text-align: right;">248.6960</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">001-0003</td>
+<td style="text-align: right;">226.3057</td>
+<td style="text-align: right;">370.6469</td>
+<td style="text-align: right;">210.51</td>
+<td style="text-align: right;">156.02</td>
+<td style="text-align: right;">15.7956930</td>
+<td style="text-align: right;">214.62687</td>
+<td style="text-align: right;">218.4078</td>
+<td style="text-align: right;">263.3334</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">001-0004</td>
+<td style="text-align: right;">176.5268</td>
+<td style="text-align: right;">239.0387</td>
+<td style="text-align: right;">184.92</td>
+<td style="text-align: right;">137.83</td>
+<td style="text-align: right;">-8.3932075</td>
+<td style="text-align: right;">101.20868</td>
+<td style="text-align: right;">180.7234</td>
+<td style="text-align: right;">188.4343</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">001-0005</td>
+<td style="text-align: right;">192.3013</td>
+<td style="text-align: right;">300.2459</td>
+<td style="text-align: right;">190.18</td>
+<td style="text-align: right;">174.10</td>
+<td style="text-align: right;">2.1212527</td>
+<td style="text-align: right;">126.14585</td>
+<td style="text-align: right;">191.2406</td>
+<td style="text-align: right;">237.1729</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">001-0006</td>
+<td style="text-align: right;">176.6057</td>
+<td style="text-align: right;">409.7711</td>
+<td style="text-align: right;">166.26</td>
+<td style="text-align: right;">147.49</td>
+<td style="text-align: right;">10.3457218</td>
+<td style="text-align: right;">262.28108</td>
+<td style="text-align: right;">171.4329</td>
+<td style="text-align: right;">278.6305</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">001-0007</td>
+<td style="text-align: right;">239.7237</td>
+<td style="text-align: right;">396.9926</td>
+<td style="text-align: right;">229.61</td>
+<td style="text-align: right;">181.40</td>
+<td style="text-align: right;">10.1136820</td>
+<td style="text-align: right;">215.59255</td>
+<td style="text-align: right;">234.6668</td>
+<td style="text-align: right;">289.1963</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">001-0008</td>
+<td style="text-align: right;">253.1289</td>
+<td style="text-align: right;">448.8240</td>
+<td style="text-align: right;">246.80</td>
+<td style="text-align: right;">202.20</td>
+<td style="text-align: right;">6.3289034</td>
+<td style="text-align: right;">246.62397</td>
+<td style="text-align: right;">249.9645</td>
+<td style="text-align: right;">325.5120</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">001-0009</td>
+<td style="text-align: right;">120.8033</td>
+<td style="text-align: right;">149.7282</td>
+<td style="text-align: right;">120.32</td>
+<td style="text-align: right;">97.40</td>
+<td style="text-align: right;">0.4832540</td>
+<td style="text-align: right;">52.32821</td>
+<td style="text-align: right;">120.5616</td>
+<td style="text-align: right;">123.5641</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">001-0010</td>
+<td style="text-align: right;">155.1358</td>
+<td style="text-align: right;">190.5303</td>
+<td style="text-align: right;">145.46</td>
+<td style="text-align: right;">144.79</td>
+<td style="text-align: right;">9.6758344</td>
+<td style="text-align: right;">45.74032</td>
+<td style="text-align: right;">150.2979</td>
+<td style="text-align: right;">167.6602</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="convert-into-long-table" class="level3" data-number="4.2.2">
+<h3 data-number="4.2.2" class="anchored" data-anchor-id="convert-into-long-table"><span class="header-section-number">4.2.2</span> Convert into long table</h3>
+<p>Before plotting the data, it’s easier to convert the table <code>dt_all</code> into a long table:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>dt_all_long <span class="ot">&lt;-</span> <span class="fu">pivot_longer</span>(</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  dt_all, </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">cols =</span> <span class="sc">-</span><span class="fu">c</span>(patientID),</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">names_to =</span> <span class="fu">c</span>(<span class="st">"ventricle"</span>, <span class="st">"method"</span>),</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">names_sep =</span> <span class="st">"_"</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">ventricle =</span> <span class="fu">as.factor</span>(ventricle),</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">method =</span> <span class="fu">as.factor</span>(method)</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">head</span>(dt_all_long, <span class="dv">20</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">patientID</th>
+<th style="text-align: left;">ventricle</th>
+<th style="text-align: left;">method</th>
+<th style="text-align: right;">value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">001-0001</td>
+<td style="text-align: left;">LVEDV</td>
+<td style="text-align: left;">auto</td>
+<td style="text-align: right;">253.2800393</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">001-0001</td>
+<td style="text-align: left;">RVEDV</td>
+<td style="text-align: left;">auto</td>
+<td style="text-align: right;">525.5833727</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">001-0001</td>
+<td style="text-align: left;">LVEDV</td>
+<td style="text-align: left;">man</td>
+<td style="text-align: right;">253.3900000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">001-0001</td>
+<td style="text-align: left;">RVEDV</td>
+<td style="text-align: left;">man</td>
+<td style="text-align: right;">214.2500000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">001-0001</td>
+<td style="text-align: left;">LVEDV</td>
+<td style="text-align: left;">diff</td>
+<td style="text-align: right;">-0.1099607</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">001-0001</td>
+<td style="text-align: left;">RVEDV</td>
+<td style="text-align: left;">diff</td>
+<td style="text-align: right;">311.3333727</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">001-0001</td>
+<td style="text-align: left;">LVEDV</td>
+<td style="text-align: left;">avg</td>
+<td style="text-align: right;">253.3350196</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">001-0001</td>
+<td style="text-align: left;">RVEDV</td>
+<td style="text-align: left;">avg</td>
+<td style="text-align: right;">369.9166864</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">001-0002</td>
+<td style="text-align: left;">LVEDV</td>
+<td style="text-align: left;">auto</td>
+<td style="text-align: right;">204.6309099</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">001-0002</td>
+<td style="text-align: left;">RVEDV</td>
+<td style="text-align: left;">auto</td>
+<td style="text-align: right;">335.4120002</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">001-0002</td>
+<td style="text-align: left;">LVEDV</td>
+<td style="text-align: left;">man</td>
+<td style="text-align: right;">171.2900000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">001-0002</td>
+<td style="text-align: left;">RVEDV</td>
+<td style="text-align: left;">man</td>
+<td style="text-align: right;">161.9800000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">001-0002</td>
+<td style="text-align: left;">LVEDV</td>
+<td style="text-align: left;">diff</td>
+<td style="text-align: right;">33.3409099</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">001-0002</td>
+<td style="text-align: left;">RVEDV</td>
+<td style="text-align: left;">diff</td>
+<td style="text-align: right;">173.4320002</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">001-0002</td>
+<td style="text-align: left;">LVEDV</td>
+<td style="text-align: left;">avg</td>
+<td style="text-align: right;">187.9604550</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">001-0002</td>
+<td style="text-align: left;">RVEDV</td>
+<td style="text-align: left;">avg</td>
+<td style="text-align: right;">248.6960001</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">001-0003</td>
+<td style="text-align: left;">LVEDV</td>
+<td style="text-align: left;">auto</td>
+<td style="text-align: right;">226.3056930</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">001-0003</td>
+<td style="text-align: left;">RVEDV</td>
+<td style="text-align: left;">auto</td>
+<td style="text-align: right;">370.6468697</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">001-0003</td>
+<td style="text-align: left;">LVEDV</td>
+<td style="text-align: left;">man</td>
+<td style="text-align: right;">210.5100000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">001-0003</td>
+<td style="text-align: left;">RVEDV</td>
+<td style="text-align: left;">man</td>
+<td style="text-align: right;">156.0200000</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>See more about <a href="https://tidyr.tidyverse.org/articles/pivot.html" target="_blank">pivoting tables</a>.</p>
+</section>
+</section>
+<section id="the-plot" class="level2" data-number="4.3">
+<h2 data-number="4.3" class="anchored" data-anchor-id="the-plot"><span class="header-section-number">4.3</span> The plot</h2>
+<section id="lvedv" class="level3" data-number="4.3.1">
+<h3 data-number="4.3.1" class="anchored" data-anchor-id="lvedv"><span class="header-section-number">4.3.1</span> LVEDV</h3>
+</section>
+<section id="rvedv" class="level3" data-number="4.3.2">
+<h3 data-number="4.3.2" class="anchored" data-anchor-id="rvedv"><span class="header-section-number">4.3.2</span> RVEDV</h3>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
+<div id="ref-bland1986statistical" class="csl-entry" role="listitem">
+Bland, J Martin, and DouglasG Altman. 1986. <span>“Statistical Methods for Assessing Agreement Between Two Methods of Clinical Measurement.”</span> <em>The Lancet</em> 327 (8476): 307–10.
+</div>
+</div>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./data_summary.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Different ways to summarise</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./references.html" class="pagination-link">
+        <span class="nav-page-text">References</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+</body></html>
