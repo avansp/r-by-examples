@@ -1,0 +1,213 @@
+# `%>%` operator
+
+The cryptic operator `%>%` in this book is called *pipe* or *chain* operator. It's a simple way to reformat your R scripts to be human readable scripts. I'll show you how here.
+
+::: callout-note
+The pipe operator `%>%` is available from the [magrittr](https://magrittr.tidyverse.org/){target="_blank"} package, which can be activated by using the [tidyverse](https://www.tidyverse.org/){target="_blank"} package. Hence, you need to call this statement
+
+```{r, message=FALSE}
+library(tidyverse)
+```
+
+before you use the `%>%` operator.
+
+Since ver 4.1.0, R provides the default `|>` pipe operator. It's basically the same function between the two operators with some advantages of using `%>%`, which I prefer. I write these differences at the end of this chapter.
+:::
+
+## What is a pipe or chain operator?
+
+The idea is to simply perform a set of operations where the output of one operation becomes an input of the next operation.
+
+Let's say you have the following operations:
+
+```{r, eval=FALSE}
+# --- this code is not running
+data <- get_input()
+data_1 <- shift_data(data, h=10)
+data_2 <- separate_data(data_1, sep="_", sort=TRUE)
+print(data_2)
+# ---
+```
+
+You can write the whole operations to become
+
+```{r, eval=FALSE}
+# --- this code is not running
+print(separate_data(shift_data(get_input(), h=10), sep="_", sort=TRUE))
+# ---
+```
+
+but this becomes cumbersome and unreadable.
+
+If you examine the operations further, you notice that the first argument of each operation, except the first one, is the output of the previous operation. With the pipe operator `%>%`, you can rewrite it into
+
+```{r, eval=FALSE}
+# --- this code is not running
+get_input() %>%
+  shift_data(h=10) %>%
+  separate_date(sep="_", sort=TRUE) %>%
+  print()
+# ---
+```
+
+And the block of operation becomes readable: *get the input data*, then *shift the data by 10*, then *separate the data by using the character '\_' as a separator and sort them*, and finally *print the result*. You don't even define a variable to capture the results !!.
+
+::: callout-note
+By the default, the `%>%` operator will give the input of the left hand side operation into **the first argument** of the right hand side operation. There is a trick to put which argument you want on the right hand side by using the dot operator. See the later examples.
+:::
+
+## Example 1: The Empire Strikes Back
+
+There is a built-in data called `starwars` from `tidyr` package, which is part of `tidyverse`. You are interested to see names of characters that appeared in the famous "The Empire Strikes Back" episode of Star Wars.
+
+```{r}
+glimpse(starwars)
+```
+
+### Without piping
+
+Let's work out traditionally without using the pipe operators. To simplify the name of variables, I'll use the same name of variable for the input/output processes.
+
+```{r, eval=FALSE}
+# read the data
+dt <- starwars
+# filter only characters that appeared in "The Empire Strikes Back" movie
+dt <- rowwise(dt)
+dt <- filter(dt, "The Empire Strikes Back" %in% films)
+dt <- ungroup(dt)
+# show the name, sex, gender, homeworld and their species only
+dt <- select(dt, c(name, sex, gender, homeworld, species))
+# print
+dt
+```
+
+### With piping
+
+```{r}
+starwars %>%
+  rowwise() %>%
+  filter("The Empire Strikes Back" %in% films) %>%
+  ungroup() %>%
+  select(c(name, sex, gender, homeworld, species)) %>%
+  knitr::kable()
+```
+
+::: callout-note
+In the example above, there is statement `rowwise()` before filtering the rows. This is needed because by default statistical operations are performed column-wise. For example, `max(A,B,C)` will perform the maximum of columns A, B, and C together.
+
+```{r}
+dt <- data.frame(id=paste("id", c(1:5), sep="_"), A=runif(5), B=runif(5), C=runif(5))
+
+mutate(dt, max=max(A,B,C))
+```
+
+Compare to this:
+
+```{r}
+dt %>% rowwise() %>% mutate(max=max(A,B,C)) %>% ungroup()
+```
+
+The `rowwise()` function groups data by rows, and the last `ungroup()` function removes the grouping.
+
+See more about [row-wise and column-wise operation in R](https://dplyr.tidyverse.org/articles/rowwise.html){target="_blank"}.
+:::
+
+## Example 2: Piping with `gtsummary`
+
+There are some packages that are fully compatible with `%>%` operator. One of them is `gtsummary`, which provides lots of useful summarisation functions for different tables.
+
+Let's try to make a summary of the `iris3` table:
+
+```{r}
+library(gtsummary)
+```
+
+```{r}
+iris %>%
+  tbl_summary(by=Species) %>%
+  add_p() %>%
+  modify_header(label = "*Morphology*") %>%
+  modify_spanning_header(all_stat_cols() ~ "**Iris Species N = {N}**")
+```
+
+## Example 3: `ggplot2`
+
+The package `ggplot2` also provide *chaining* operations by using different symbol, e.g. `+` the plus character. Usually it's intended to add new objects to the canvas. You can combine both pipe operations to create a nice plot with readable script. For example,
+
+```{r}
+library(ggplot2)
+```
+
+```{r}
+USArrests %>%
+  # make an explicit column for the row names
+  rownames_to_column("State") %>%
+  # ignore the UrbanPop column
+  select(-c(UrbanPop)) %>%
+  # make a long table
+  pivot_longer(-c(State), names_to = "Crime", values_to = "Arrests") %>%
+  # sort by US state
+  arrange(State) %>%
+  # give it to ggplot
+  ggplot(aes(x=State, y=Arrests, color=Crime)) +
+  # hence the chaining operations in ggplot
+  facet_wrap(vars(Crime), scales="free_x") +
+  geom_segment(aes(x=State, xend=State, y=0, yend=Arrests)) +
+  geom_point(size=2, alpha=0.6) +
+  coord_flip() +
+  theme(legend.position="none") +
+  xlab("US State") +
+  ylab("Number of arrests (in 100,000)") 
+```
+
+## Differences between `%>%` and `|>` operators
+
+The statement:
+
+```{r, eval=FALSE}
+mtcars %>% filter(gear==5)
+```
+
+is equivalent with
+
+```{r, eval=FALSE}
+mtcars |> filter(gear==5)
+```
+
+which is the piping operation for
+
+```{r, eval=FALSE}
+filter(mtcars, gear==5)
+```
+
+There are some advantages of using `%>%` operator:
+
+1.  It allows you to change the argument placement of the next operation by using the dot operator:
+
+    ```{r, eval=FALSE}
+    # default is the first argument
+    x %>% f(1,2,3)   # equals to f(x,1,2,3)
+    x %>% f(1,.,2,3) # equals to f(1,x,2,3)
+    ```
+
+    For the base operator, you must give a named attribute to change the placement:
+
+    ```{r, eval=FALSE}
+    # default is the first argument
+    x |> f(1,2,3)   # equals to f(x,1,2,3)
+    x |> f(1,y=_)   # equals to f(1,x)
+    ```
+
+2.  More flexibility with dot operator:
+
+    ```{r, eval=FALSE}
+    x %>% f(.$var)      # equals to f(x, x$var)
+    x %>% {f(.$a, .$b)} # equals to f(x$a, x$b)
+    ```
+
+3.  You can use dot to create a lambda function
+
+    ```{r}
+    f <- . %>% filter(x="abc")
+    f
+    ```
