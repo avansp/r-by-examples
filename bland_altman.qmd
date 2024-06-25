@@ -1,0 +1,173 @@
+# Bland-Altman analysis
+
+The seminal paper written by Douglas G. Altman and J. Martin Bland on Lancet in 1986 [@bland1986statistical] has been the most cited paper ever. The method compares values measured by two different observers, devices, or algorithm. If the two measurements are comparable, then we expect that
+
+1.  the bias or mean of differences will be around zero,
+2.  the differences are within the limits of agreement (usually ± 2 standard deviation), and
+3.  there is no systematic differences or a trend line as the size of the object is getting bigger or smaller.
+
+Let's create a Bland-Altman plot.
+
+## Loading the data
+
+This example uses datasets from a study that segmented human heart from cardiac MR images. Two measurements were performed: by an automatic segmentation method and by manual segmentation. We're going to use only the left ventricle volume at end-diastole (LVEDV) and the right ventricle volume at end-diastole (RVEDV).
+
+```{r, message=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(knitr)
+```
+
+### Automated segmentation
+
+```{r}
+dt_auto <- read_csv('sample_data/auto_heart.csv', show_col_types = FALSE,
+                    col_types = cols(
+                      name = col_character(),
+                      Frame = col_character(),
+                      lv_vol = col_double(),
+                      rv_vol = col_double()
+                    )) %>%
+  # the ED frame for automated segmentation is at Frame == '000'
+  filter(Frame == '000') %>%
+  # select only the necessary columns
+  select(name, lv_vol, rv_vol) %>%
+  # fix the name to match with patient ID's from the manual data
+  mutate(
+    name = str_replace(str_replace(name, 'HCMR_', ''), '_', '-'),
+  ) %>%
+  rename(LVEDV = lv_vol, RVEDV = rv_vol, patientID = name)
+
+glimpse(dt_auto)
+```
+
+We have `r nrow(dt_auto)` rows of `patientID`, `LVEDV`, and `RVEDV` for the automated segmentation method.
+
+### Manual segmentation
+
+```{r, warning=FALSE}
+dt_man <- read_csv('sample_data/corelab_heart.csv', show_col_types = FALSE,
+                   col_types = cols(
+                     sitePatID = col_character(),
+                     lvedv = col_double(),
+                     rvedv = col_double()
+                   )) %>%
+  select(sitePatID, lvedv, rvedv) %>%
+  rename(LVEDV = lvedv, RVEDV = rvedv, patientID = sitePatID)
+
+glimpse(dt_man)
+```
+
+We have `r nrow(dt_man)` rows of `patientID`, `LVEDV`, and `RVEDV` from the manual segmentation method.
+
+### Join the tables
+
+We need to join the two tables using `inner_join`. See more: [join operations.](https://dplyr.tidyverse.org/reference/mutate-joins.html){target="_blank"}
+
+```{r}
+dt_joined <- inner_join(dt_auto, dt_man,
+                        by = c("patientID" = "patientID"),
+                        suffix = c("_auto", "_man"))
+
+glimpse(dt_joined)
+```
+
+We have now `r nrow(dt_joined)` rows of `patientID`, `LVEDV_auto`, `LVEDV_man`, `RVEDV_auto`, and `RVEDV_man`.
+
+**A sanity check**: we can check if there are duplicate `patientID`'s in the table by checking if the number of unique patient ID the same with the number of rows
+
+```{r, echo=TRUE}
+nrow(dt_joined) == nrow(distinct(dt_joined, patientID))
+```
+
+## Calculate differences and averages
+
+Bland-Altman analysis plots points, where
+
+-   x-axis is the average between the two methods, and
+
+-   y-axis is the differences between the two methods
+
+Thus, we need to calculate the differences and the averages between the automated and segmentation methods for both LVEDV and RVEDV values.
+
+```{r}
+dt_ba <- dt_joined %>%
+  mutate(
+    # differences between automated and manual segmentations
+    LVEDV_diff = LVEDV_auto - LVEDV_man,
+    RVEDV_diff = RVEDV_auto - RVEDV_man,
+    # average between automated and manual segmentations
+    LVEDV_avg = 0.5 * (LVEDV_auto + LVEDV_man),
+    RVEDV_avg = 0.5 * (RVEDV_auto + RVEDV_man)
+  )
+```
+
+which will give you a table like this:
+
+```{r}
+knitr::kable(head(dt_ba, n=5))
+```
+
+## LVEDV
+
+We can calculate the bias and the limits of agreement: ±1.96 standard deviation:
+
+```{r}
+(LVEDV_stats <- 
+   mean(dt_ba$LVEDV_diff, na.rm=TRUE) + 
+   c(-1.96, 0, 1.96) * sd(dt_ba$LVEDV_diff, na.rm=TRUE))
+```
+
+This means that for LVEDV:
+
+1.  The bias is `r LVEDV_stats[2]` ml, and
+2.  The limit of agreements is between [`r c(LVEDV_stats[1], LVEDV_stats[3])`] ml.
+
+Create the plot
+
+```{r}
+dt_ba %>%
+  # drop missing values to avoid warning from ggplot2
+  drop_na(LVEDV_avg, LVEDV_diff) %>%
+  # plot LVEDV_diff vs LVEDV_avg 
+  ggplot(aes(x=LVEDV_avg, y=LVEDV_diff)) +
+  geom_point(col="dodgerblue4", alpha=0.6) +
+  ylab("Auto - Manual (ml)") +
+  xlab("Average (ml)") +
+  ggtitle("Bland-Altman comparison plot of the LVEDV (ml)") +
+  geom_hline(yintercept = LVEDV_stats, col="firebrick", lty=2)
+```
+
+*One particular case needs to be checked for a gross error in the automated segmentation.*
+
+## RVEDV
+
+We can calculate the bias and the limits of agreement: ±1.96 standard deviation:
+
+```{r}
+(RVEDV_stats <- 
+   mean(dt_ba$RVEDV_diff, na.rm=TRUE) + 
+   c(-1.96, 0, 1.96) * sd(dt_ba$RVEDV_diff, na.rm=TRUE))
+```
+
+This means that for LVEDV:
+
+1.  The bias is `r RVEDV_stats[2]` ml, and
+2.  The limit of agreements is between [`r c(RVEDV_stats[1], RVEDV_stats[3])`] ml.
+
+Create the plot
+
+```{r}
+dt_ba %>%
+  # drop missing values to avoid warning from ggplot2
+  drop_na(RVEDV_avg, RVEDV_diff) %>%
+  # plot RVEDV_diff vs RVEDV_avg 
+  ggplot(aes(x=RVEDV_avg, y=RVEDV_diff)) +
+  geom_point(col="dodgerblue4", alpha=0.6) +
+  ylab("Auto - Manual (ml)") +
+  xlab("Average (ml)") +
+  ggtitle("Bland-Altman comparison plot of the RVEDV (ml)") +
+  geom_hline(yintercept = RVEDV_stats, col="firebrick", lty=2)
+```
+
+*There is clearly a systematic bias here with a strong trend line towards large bias when the size of the heart is increasing.*

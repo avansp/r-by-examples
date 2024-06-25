@@ -1,4 +1,4 @@
-# `%>%` operator
+# The pipe operator (`%>%`)
 
 The cryptic operator `%>%` in this book is called *pipe* or *chain* operator. It's a simple way to reformat your R scripts to be human readable scripts. I'll show you how here.
 
@@ -9,7 +9,7 @@ The pipe operator `%>%` is available from the [magrittr](https://magrittr.tidyve
 library(tidyverse)
 ```
 
-before you use the `%>%` operator.
+before you can use the `%>%` operator.
 
 Since ver 4.1.0, R provides the default `|>` pipe operator. It's basically the same function between the two operators with some advantages of using `%>%`, which I prefer. I write these differences at the end of this chapter.
 :::
@@ -116,9 +116,9 @@ See more about [row-wise and column-wise operation in R](https://dplyr.tidyverse
 
 There are some packages that are fully compatible with `%>%` operator. One of them is `gtsummary`, which provides lots of useful summarisation functions for different tables.
 
-Let's try to make a summary of the `iris3` table:
+Let's try to make a summary of the `iris` table:
 
-```{r}
+```{r, message=FALSE}
 library(gtsummary)
 ```
 
@@ -132,7 +132,7 @@ iris %>%
 
 ## Example 3: `ggplot2`
 
-The package `ggplot2` also provide *chaining* operations by using different symbol, e.g. `+` the plus character. Usually it's intended to add new objects to the canvas. You can combine both pipe operations to create a nice plot with readable script. For example,
+The package `ggplot2` also provide *chaining* operations by using a different symbol, i.e. `+` the plus character. Usually it's intended to add new objects to the canvas. You can combine both pipe operations to create a nice plot For example,
 
 ```{r}
 library(ggplot2)

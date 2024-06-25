@@ -7,14 +7,10 @@ book:
   date: ""
   chapters:
     - index.qmd
-    - part: "Basic Concepts" 
-      chapters:
-      - pipes.qmd
-    - part: "Examples"
-      chapters:
-      - load_and_prepare.qmd
-      - data_summary.qmd
-      - bland_altman.qmd
+    - pipes.qmd
+    - load_and_prepare.qmd
+    - data_summary.qmd
+    - bland_altman.qmd
     - references.qmd
 
 bibliography: references.bib
